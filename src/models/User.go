@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"html"
 	"strings"
 	"time"
@@ -52,7 +53,7 @@ func (user *User) Validate() error {
 func (user *User) SaveUser(db *gorm.DB) (*User, error) {
 
 	// Begin Transaction
-	tx := db.Begin()
+	tx := db.Debug().Begin()
 
 	// recover defer
 	defer func() {
@@ -73,5 +74,19 @@ func (user *User) SaveUser(db *gorm.DB) (*User, error) {
 	err = tx.Commit().Error
 
 	// Return Value
+	return user, err
+}
+
+func (user *User) FindUserByID(db *gorm.DB, uid uint64) (*User, error) {
+
+	err := db.Debug().Model(User{}).Where("id = ?", uid).Take(&user).Error
+
+	if nil != err {
+		return &User{}, err
+	}
+
+	if gorm.IsRecordNotFoundError(err) {
+		return &User{}, errors.New("User Not Found")
+	}
 	return user, err
 }
