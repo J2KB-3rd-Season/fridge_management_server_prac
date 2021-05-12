@@ -2,11 +2,10 @@ package middleware
 
 import (
 	"errors"
-	"fridge/src/auth"
 	"net/http"
 
-	"hodong/auth"
-	"hodong/response"
+	"fridge/src/auth"
+	"fridge/src/response"
 )
 
 func SetMiddlewareJSON(next http.HandlerFunc) http.HandlerFunc {
@@ -22,7 +21,7 @@ func SetMiddlewareAuthentication(next http.HandlerFunc) http.HandlerFunc {
 		err := auth.VaildToken(r)
 
 		if nil != err {
-			response.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
+			response.MakeJsonError(w, http.StatusUnauthorized, errors.New("Unauthorized"))
 			return
 		}
 
