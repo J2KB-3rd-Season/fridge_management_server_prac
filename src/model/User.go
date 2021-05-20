@@ -3,6 +3,7 @@ package model
 import (
 	"errors"
 	"html"
+	"log"
 	"strings"
 	"time"
 
@@ -88,5 +89,49 @@ func (user *User) FindUserByID(db *gorm.DB, uid uint64) (*User, error) {
 	if gorm.IsRecordNotFoundError(err) {
 		return &User{}, errors.New("User Not Found")
 	}
+	return user, err
+}
+
+func (user *User) UpdateUser(db *gorm.DB, uid uint64) (*User, error) {
+	err := user.DoBeforeSave()
+	if nil != err {
+		log.Fatal(err)
+	}
+
+	// Begin Transaction
+	tx := db.Debug().Begin()
+
+	// recover defer
+	defer func() {
+		if r := recover(); nil != r {
+			tx.Rollback()
+		}
+	}()
+
+	// DB Logic Start
+	err = db.Debug().Model(&User{}).Where("id = ?", uid).Take(&user).Error
+	if err != nil {
+		return &User{}, err
+	}
+
+	db = db.Debug().Model(&User{}).Where("id = ?", uid).Take(&User{}).UpdateColumns(
+		map[string]interface{}{
+			"password":  user.Password,
+			"name":      user.Name,
+			"email":     user.Email,
+			"update_at": time.Now(),
+		},
+	)
+
+	if nil != db.Error {
+		return &User{}, db.Error
+	}
+
+	// DB Logic End
+
+	// Commit Transaction
+	err = tx.Commit().Error
+
+	// Return Value
 	return user, err
 }

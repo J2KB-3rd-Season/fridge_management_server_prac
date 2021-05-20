@@ -41,6 +41,7 @@ func (server *RestServer) Initialize(Dbdriver, DbUser, DbPassword, DbPort, DbHos
 	server.DB.Debug().AutoMigrate(&model.Inventory{})
 	server.DB.Debug().AutoMigrate(&model.Item{})
 
+	server.DB.Debug().Model(&model.Inventory{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
 	server.DB.Debug().Model(&model.Inventory{}).AddForeignKey("type_id", "inventory_types(id)", "RESTRICT", "RESTRICT")
 	server.DB.Debug().Model(&model.Item{}).AddForeignKey("inventory_id", "inventories(id)", "RESTRICT", "RESTRICT")
 
@@ -53,22 +54,22 @@ func (server *RestServer) initializeRoutes() {
 
 	// Home Route
 	server.Router.HandleFunc("/", middleware.SetMiddlewareJSON(server.HealthCheck)).Methods("GET")
-	/*
-		// Login Route
-		s.Router.HandleFunc("/login", middlewares.SetMiddlewareJSON(s.Login)).Methods("POST")
 
-		//Users routes
-		s.Router.HandleFunc("/users", middlewares.SetMiddlewareJSON(s.CreateUser)).Methods("POST")
-		s.Router.HandleFunc("/users", middlewares.SetMiddlewareJSON(s.GetUsers)).Methods("GET")
-		s.Router.HandleFunc("/users/{id}", middlewares.SetMiddlewareJSON(s.GetUser)).Methods("GET")
-		s.Router.HandleFunc("/users/{id}", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.UpdateUser))).Methods("PUT")
-		s.Router.HandleFunc("/users/{id}", middlewares.SetMiddlewareAuthentication(s.DeleteUser)).Methods("DELETE")
-	*/
+	// Login Route
+	server.Router.HandleFunc("/login", middleware.SetMiddlewareJSON(server.Login)).Methods("POST")
+
+	//Users routes
+	server.Router.HandleFunc("/users", middleware.SetMiddlewareJSON(server.CreateUser)).Methods("POST")
+	//s.Router.HandleFunc("/users", middlewares.SetMiddlewareJSON(s.GetUsers)).Methods("GET")
+	server.Router.HandleFunc("/users/{id}", middleware.SetMiddlewareJSON(server.GetUser)).Methods("GET")
+	server.Router.HandleFunc("/users/{id}", middleware.SetMiddlewareJSON(middleware.SetMiddlewareAuthentication(server.UpdateUser))).Methods("PUT")
+	//s.Router.HandleFunc("/users/{id}", middlewares.SetMiddlewareAuthentication(s.DeleteUser)).Methods("DELETE")
+
 }
 
 func (server *RestServer) Run(addr string) {
 
-	fmt.Println("Listening to port 8080")
+	fmt.Println("Listening to port 8000")
 	log.Fatal(http.ListenAndServe(addr, server.Router))
 }
 

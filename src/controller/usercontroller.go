@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"fridge/src/auth"
 	"fridge/src/model"
 	"fridge/src/response"
 	"io/ioutil"
@@ -65,4 +66,50 @@ func (server *RestServer) GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	response.MakeJson(w, http.StatusOK, userGotten)
+}
+
+func (server *RestServer) UpdateUser(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	uid, err := strconv.ParseUint(vars["id"], 10, 64)
+	if nil != err {
+		response.MakeJsonError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	body, err := ioutil.ReadAll(r.Body)
+	if nil != err {
+		response.MakeJsonError(w, http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	user := model.User{}
+	err = json.Unmarshal(body, &user)
+	if nil != err {
+		response.MakeJsonError(w, http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	tokenID, err := auth.ExtractTokenID(r)
+
+	if nil != err {
+		response.MakeJsonError(w, http.StatusUnauthorized, errors.New("Unauthorized"))
+		return
+	}
+
+	if tokenID != uint64(uid) {
+		response.MakeJsonError(w, http.StatusUnauthorized, errors.New(http.StatusText(http.StatusUnauthorized)))
+		return
+	}
+
+	user.DoBeforeSave()
+
+	updatedUser, err := user.UpdateUser(server.DB, uint64(uid))
+	if err != nil {
+		//formattedError := formaterror.FormatError(err.Error())
+		response.MakeJsonError(w, http.StatusInternalServerError, errors.New(http.StatusText(http.StatusUnauthorized)))
+		return
+	}
+
+	response.MakeJson(w, http.StatusOK, updatedUser)
 }
