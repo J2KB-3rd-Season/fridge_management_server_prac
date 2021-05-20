@@ -34,15 +34,15 @@ func (server *RestServer) Initialize(Dbdriver, DbUser, DbPassword, DbPort, DbHos
 		fmt.Printf("We are connected to the %s database", Dbdriver)
 	}
 
-	server.DB.Debug().DropTableIfExists(&model.User{}, &model.InventoryType{}, &model.Inventory{}, &model.Item{})
+	server.DB.Debug().DropTableIfExists(&model.User{}, &model.Inventory{}, &model.ItemType{}, &model.Item{})
 
 	server.DB.Debug().AutoMigrate(&model.User{})
-	server.DB.Debug().AutoMigrate(&model.InventoryType{})
+	server.DB.Debug().AutoMigrate(&model.ItemType{})
 	server.DB.Debug().AutoMigrate(&model.Inventory{})
 	server.DB.Debug().AutoMigrate(&model.Item{})
 
 	server.DB.Debug().Model(&model.Inventory{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
-	server.DB.Debug().Model(&model.Inventory{}).AddForeignKey("type_id", "inventory_types(id)", "RESTRICT", "RESTRICT")
+	server.DB.Debug().Model(&model.Item{}).AddForeignKey("type_id", "item_types(id)", "RESTRICT", "RESTRICT")
 	server.DB.Debug().Model(&model.Item{}).AddForeignKey("inventory_id", "inventories(id)", "RESTRICT", "RESTRICT")
 
 	server.Router = mux.NewRouter()

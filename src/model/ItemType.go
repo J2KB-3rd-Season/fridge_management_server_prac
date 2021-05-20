@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-type InventoryType struct {
+type ItemType struct {
 	ID        uint64    `gorm:"primary_key;auto_increment" json:"id"`
 	TypeEnum  int       `gorm:"not null;unique" json:"type_enum"`
 	TypeTitle string    `gorm:"size:255;not null;unique" json:"type_title"`
